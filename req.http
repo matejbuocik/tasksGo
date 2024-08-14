@@ -1,0 +1,25 @@
+GET https://localhost:8080/task
+###
+POST https://admin:adminkooo@localhost:8080/task
+content-type: application/json
+
+{
+    "text": "adminov task",
+    "due": "2024-08-31T00:00:00Z"
+}
+###
+GET https://localhost:8080/tag/todo
+###
+GET https://localhost:8080/due/2024/8/31
+###
+DELETE https://admin:adminkooo@localhost:8080/task/10
+###
+GET https://localhost:8080/health
+###
+POST https://admin:adminkooo@localhost:8080/register
+content-type: application/json
+
+{
+    "name": "admin",
+    "pass": "adminkooo"
+}

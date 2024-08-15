@@ -59,7 +59,10 @@ export default function CreateTaskDialog() {
     const headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
     headers.set('Content-Type', 'application/json');
-    await fetch(`https://localhost:8080/task`, { method: 'POST', headers, body: JSON.stringify(task) });
+    const res = await fetch(`https://localhost:8080/task`, { method: 'POST', headers, body: JSON.stringify(task) });
+    if (!res.ok) {
+      throw new Error("Something went wrong");
+    }
   }
   const queryClient = useQueryClient();
   const mutation = useMutation({
@@ -77,16 +80,15 @@ export default function CreateTaskDialog() {
     if (!values.tags?.find(t => t == "todo")) {
       values.tags.push("todo");
     }
-    mutation.mutate(values);
+
+    mutation.mutate(values, {
+      onSuccess: () => toast({ description: "Task created ✅", duration: 3000 }),
+      onError: () => toast({ description: "Could not create task, please try again later.", duration: 3000, variant: "destructive" }),
+    });
 
     form.reset();
     setTags([]);
     setActiveTagIndex(null);
-
-    toast({
-      description: "Task created ✅",
-      duration: 3000,
-    });
   }
 
   return (

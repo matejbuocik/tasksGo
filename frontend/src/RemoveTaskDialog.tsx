@@ -20,9 +20,12 @@ interface RemoveTaskProps {
 
 export default function RemoveTaskDialog({ task }: RemoveTaskProps) {
   const removeTask = async (id: number) => {
-    let headers = new Headers();
+    const headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
-    await fetch(`https://localhost:8080/task/${id}`, { method: 'DELETE', headers });
+    const res = await fetch(`https://localhost:8080/task/${id}`, { method: 'DELETE', headers });
+    if (!res.ok) {
+      throw new Error("Something went wrong");
+    }
   }
   const queryClient = useQueryClient()
   const mutation = useMutation({
@@ -34,11 +37,10 @@ export default function RemoveTaskDialog({ task }: RemoveTaskProps) {
 
   const { toast } = useToast();
   const onRemove = () => {
-    toast({
-      description: "Task deleted ✅",
-      duration: 3000,
+    mutation.mutate(task.id, {
+      onSuccess: () => toast({ description: "Task deleted ✅", duration: 3000 }),
+      onError: () => toast({ description: "Could not delete task, please try again later.", duration: 3000, variant: "destructive" }),
     });
-    mutation.mutate(task.id);
   }
 
   return (

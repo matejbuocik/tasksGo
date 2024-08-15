@@ -71,6 +71,12 @@ export default function CreateTaskDialog() {
 
   const { toast } = useToast();
   function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!values.tags) {
+      values.tags = [];
+    }
+    if (!values.tags?.find(t => t == "todo")) {
+      values.tags.push("todo");
+    }
     mutation.mutate(values);
 
     form.reset();

@@ -82,16 +82,16 @@ func main() {
 	log.Fatal(srv.ListenAndServeTLS(*certFile, *keyFile))
 }
 
-func handleError(w http.ResponseWriter, err error) {
-	log.Printf("Error: %s", err)
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
+	log.Printf("Error: ->%s %s %s -- %s", r.RemoteAddr, r.Method, r.RequestURI, err)
 	http.Error(w, "Oops! We made a mistake and are working on fixing it ASAP!", 500)
 }
 
 // RenderJSON renders 'v' as JSON and writes it as a response into w.
-func renderJSON(w http.ResponseWriter, v interface{}) {
+func renderJSON(w http.ResponseWriter, r *http.Request, v interface{}) {
 	js, err := json.Marshal(v)
 	if err != nil {
-		handleError(w, err)
+		handleError(w, r, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -99,6 +99,7 @@ func renderJSON(w http.ResponseWriter, v interface{}) {
 }
 
 // ParseJSON decodes json from request body into value pointed to by v.
+// It sends error message when something unexpected happens.
 func parseJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -128,19 +129,19 @@ func (s TaskServer) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	newTask, err := s.tasks.CreateTask(newTask)
 	if err != nil {
-		handleError(w, err)
+		handleError(w, r, err)
 		return
 	}
-	renderJSON(w, newTask)
+	renderJSON(w, r, newTask)
 }
 
 func (s TaskServer) getAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 	allTasks, err := s.tasks.GetAllTasks()
 	if err != nil {
-		handleError(w, err)
+		handleError(w, r, err)
 		return
 	}
-	renderJSON(w, allTasks)
+	renderJSON(w, r, allTasks)
 }
 
 func (s TaskServer) deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +153,7 @@ func (s TaskServer) deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = s.tasks.DeleteTask(id)
 	if err != nil {
-		handleError(w, err)
+		handleError(w, r, err)
 	}
 }
 
@@ -160,10 +161,10 @@ func (s TaskServer) tagHandler(w http.ResponseWriter, r *http.Request) {
 	tag := r.PathValue("tag")
 	tasks, err := s.tasks.GetTasksByTag(tag)
 	if err != nil {
-		handleError(w, err)
+		handleError(w, r, err)
 		return
 	}
-	renderJSON(w, tasks)
+	renderJSON(w, r, tasks)
 }
 
 func (s TaskServer) dueHandler(w http.ResponseWriter, r *http.Request) {
@@ -178,10 +179,10 @@ func (s TaskServer) dueHandler(w http.ResponseWriter, r *http.Request) {
 	date := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 	tasks, err := s.tasks.GetTasksByDue(date)
 	if err != nil {
-		handleError(w, err)
+		handleError(w, r, err)
 		return
 	}
-	renderJSON(w, tasks)
+	renderJSON(w, r, tasks)
 }
 
 func (s TaskServer) registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -200,7 +201,7 @@ func (s TaskServer) registerHandler(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(err.Error(), "exists") {
 			http.Error(w, "User with given name already exists.", http.StatusBadRequest)
 		} else {
-			handleError(w, err)
+			handleError(w, r, err)
 		}
 	}
 }

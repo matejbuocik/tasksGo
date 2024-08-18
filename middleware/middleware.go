@@ -30,7 +30,7 @@ func Logging(next http.Handler) http.Handler {
 		start := time.Now()
 		lrw := NewLoggingResponseWriter(w)
 		next.ServeHTTP(lrw, req)
-		log.Printf("->%s %s | %s %d<-", req.Method, req.RequestURI, time.Since(start), lrw.statusCode)
+		log.Printf("->%s %s %s <- %d %s", req.RemoteAddr, req.Method, req.RequestURI, lrw.statusCode, time.Since(start))
 	})
 }
 

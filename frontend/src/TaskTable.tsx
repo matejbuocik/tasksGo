@@ -31,8 +31,9 @@ const columns: ColumnDef<Task>[] = [
   {
     accessorKey: "tags",
     header: ({ column }) => {
+      const [open, setOpen] = useState(false);
       return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" className="pl-[4px]">Tags</Button>
           </DialogTrigger>
@@ -41,10 +42,12 @@ const columns: ColumnDef<Task>[] = [
               <DialogTitle>Filter by tag</DialogTitle>
               <DialogDescription />
             </DialogHeader>
-            <Input
-              value={(column.getFilterValue() as string) ?? ""}
-              onChange={event => column.setFilterValue(event.target.value)}
-            />
+            <form onSubmit={(e) => { e.preventDefault(); setOpen(false) }} action="">
+              <Input
+                value={(column.getFilterValue() as string) ?? ""}
+                onChange={event => column.setFilterValue(event.target.value)}
+              />
+            </form>
           </DialogContent>
         </Dialog>
       );

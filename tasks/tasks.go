@@ -17,7 +17,6 @@ type Tasker interface {
 	CreateTask(newTask *Task) (*Task, error)
 	DeleteTask(id int) error
 	GetAllTasks() ([]Task, error)
-	GetTasksByTag(tag string) ([]Task, error)
 }
 
 type taskRepo struct {
@@ -64,10 +63,17 @@ func (t taskRepo) GetAllTasks() ([]Task, error) {
 	tasks := make([]Task, 0)
 
 	for rows.Next() {
-		task, err := getTaskFromRows(rows)
-		if err != nil {
+		task := Task{}
+		var tags string
+		var due int64
+
+		if err := rows.Scan(&task.Id, &task.Text, &tags, &due); err != nil {
 			return nil, err
 		}
+
+		task.Tags = strings.Split(tags, ",")
+		task.Due = time.Unix(due, 0).UTC()
+
 		tasks = append(tasks, task)
 	}
 	if err = rows.Err(); err != nil {
@@ -75,38 +81,4 @@ func (t taskRepo) GetAllTasks() ([]Task, error) {
 	}
 
 	return tasks, nil
-}
-
-func (t taskRepo) GetTasksByTag(tag string) ([]Task, error) {
-	rows, err := t.db.Query("select * from task where instr(tags, ?) > 0 order by due asc", tag)
-	if err != nil {
-		return nil, err
-	}
-
-	tasks := make([]Task, 0)
-
-	for rows.Next() {
-		task, err := getTaskFromRows(rows)
-		if err != nil {
-			return nil, err
-		}
-		tasks = append(tasks, task)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
-}
-
-func getTaskFromRows(r *sql.Rows) (Task, error) {
-	task := Task{}
-	var tags string
-	var due int64
-	if err := r.Scan(&task.Id, &task.Text, &tags, &due); err != nil {
-		return task, err
-	}
-	task.Tags = strings.Split(tags, ",")
-	task.Due = time.Unix(due, 0).UTC()
-	return task, nil
 }

@@ -51,7 +51,6 @@ func main() {
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /task", server.getAllTasksHandler)
-	mux.HandleFunc("GET /tag/{tag}", server.tagHandler)
 
 	mux.Handle("DELETE /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
 	mux.HandleFunc("OPTIONS /task/{id}", func(w http.ResponseWriter, r *http.Request) {})
@@ -153,16 +152,6 @@ func (s TaskServer) deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handleError(w, r, err)
 	}
-}
-
-func (s TaskServer) tagHandler(w http.ResponseWriter, r *http.Request) {
-	tag := r.PathValue("tag")
-	tasks, err := s.tasks.GetTasksByTag(tag)
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
-	renderJSON(w, r, tasks)
 }
 
 func (s TaskServer) registerHandler(w http.ResponseWriter, r *http.Request) {

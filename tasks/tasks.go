@@ -18,7 +18,6 @@ type Tasker interface {
 	DeleteTask(id int) error
 	GetAllTasks() ([]Task, error)
 	GetTasksByTag(tag string) ([]Task, error)
-	GetTasksByDue(due time.Time) ([]Task, error)
 }
 
 type taskRepo struct {
@@ -80,28 +79,6 @@ func (t taskRepo) GetAllTasks() ([]Task, error) {
 
 func (t taskRepo) GetTasksByTag(tag string) ([]Task, error) {
 	rows, err := t.db.Query("select * from task where instr(tags, ?) > 0 order by due asc", tag)
-	if err != nil {
-		return nil, err
-	}
-
-	tasks := make([]Task, 0)
-
-	for rows.Next() {
-		task, err := getTaskFromRows(rows)
-		if err != nil {
-			return nil, err
-		}
-		tasks = append(tasks, task)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
-}
-
-func (t taskRepo) GetTasksByDue(time time.Time) ([]Task, error) {
-	rows, err := t.db.Query("select * from task where due <= ? order by due asc", time.Unix())
 	if err != nil {
 		return nil, err
 	}

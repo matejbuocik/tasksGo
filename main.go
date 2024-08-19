@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/matejbuocik/tasksGo/middleware"
 	"github.com/matejbuocik/tasksGo/tasks"
@@ -53,7 +52,6 @@ func main() {
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /task", server.getAllTasksHandler)
 	mux.HandleFunc("GET /tag/{tag}", server.tagHandler)
-	mux.HandleFunc("GET /due/{year}/{month}/{day}", server.dueHandler)
 
 	mux.Handle("DELETE /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
 	mux.HandleFunc("OPTIONS /task/{id}", func(w http.ResponseWriter, r *http.Request) {})
@@ -160,24 +158,6 @@ func (s TaskServer) deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 func (s TaskServer) tagHandler(w http.ResponseWriter, r *http.Request) {
 	tag := r.PathValue("tag")
 	tasks, err := s.tasks.GetTasksByTag(tag)
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
-	renderJSON(w, r, tasks)
-}
-
-func (s TaskServer) dueHandler(w http.ResponseWriter, r *http.Request) {
-	year, errYear := strconv.Atoi(r.PathValue("year"))
-	month, errMonth := strconv.Atoi(r.PathValue("month"))
-	day, errDay := strconv.Atoi(r.PathValue("day"))
-	if errYear != nil || errMonth != nil || errDay != nil {
-		http.Error(w, fmt.Sprintf("expect /due/<year>/<month>/<day>, got %v", r.URL.Path), http.StatusBadRequest)
-		return
-	}
-
-	date := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	tasks, err := s.tasks.GetTasksByDue(date)
 	if err != nil {
 		handleError(w, r, err)
 		return

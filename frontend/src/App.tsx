@@ -16,11 +16,11 @@ function App() {
   })
 
   return (
-    <main>
+    <main className='m-auto flex flex-col items-center'>
       <animated.h1 className='m-0 pb-8 text-center' style={{ ...springsHeading }}>
         TasksGo!
       </animated.h1>
-      <animated.div style={{ ...springs }} className='flex flex-col items-center'>
+      <animated.div style={{ ...springs }} className='flex flex-col items-center max-w-screen-xl w-full'>
         <CreateTaskDialog />
         <TaskTable />
       </animated.div>

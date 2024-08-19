@@ -1,6 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import RemoveTaskDialog from "./RemoveTaskDialog";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, ColumnFiltersState, SortingState, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Badge } from "./components/ui/badge";
 
 export interface Task {
   id: number;
@@ -16,49 +30,154 @@ const columns: ColumnDef<Task>[] = [
   },
   {
     accessorKey: "tags",
-    header: "Tags",
+    header: ({ column }) => {
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" className="pl-[4px]">Tags</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Filter by tag</DialogTitle>
+              <DialogDescription />
+            </DialogHeader>
+            <Input
+              value={(column.getFilterValue() as string) ?? ""}
+              onChange={event => column.setFilterValue(event.target.value)}
+            />
+          </DialogContent>
+        </Dialog>
+      );
+    },
+    cell: props => {
+      return (
+        <div>
+          {(props.getValue() as string[]).map(t => <Badge key={t} variant="outline">{t}</Badge>)}
+        </div>
+      );
+    },
+    filterFn: 'arrIncludes',
   },
   {
     accessorKey: "due",
-    header: "Due",
+    cell: props => {
+      const date = new Date((props.getValue() as string));
+      if (date.getUTCFullYear() == 1) {
+        return "";
+      } else {
+        return date.toDateString();
+      }
+    },
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted();
+      return (
+        <Button
+          variant="ghost"
+          className="pl-[4px]"
+          onClick={() => column.toggleSorting(!isSorted || isSorted === "asc")}
+        >
+          Due
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    }
   },
+  {
+    id: "remove",
+    cell: ({ row }) => {
+      const task = row.original;
+      return (
+        <div className="w-4">
+          <RemoveTaskDialog task={task} />
+        </div>
+      )
+    }
+  }
 ]
 
 export default function TaskTable() {
+  // pridat days remaining, priorita, cele to upravit
+  // ked ostava najeaky cas (nastaveny), poslat mail
+  // pripojenie s google kalendarom??
+  // farba tasku / podla tagu
+  // upozornenie na zostavajuce dni (ikonka co meni farbu)
+
   const getTasks = async () => {
-    const res = await fetch('https://localhost:8080/tag/todo');
-    return res.json() as Promise<Task[]>;
+    const res = await fetch('https://localhost:8080/task');
+    if (res.ok) {
+      return res.json() as Promise<Task[]>;
+    }
+    throw new Error("Something went wrong");
   }
   const { data, error, isLoading } = useQuery({ queryKey: ['tasks'], queryFn: getTasks });
 
-  if (isLoading || !data) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  const table = useReactTable({
+    columns,
+    data: data ?? [],
+    getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+    },
+  });
+
+  if (isLoading) {
     return <p>Loading...</p>;
   }
 
   if (error) {
-    return <p>{error.message}</p>
+    return <p>Error: {error.message}</p>
   }
 
   return (
-    <table className="max-w-screen-xl w-full text-lg">
-      <thead className="text-left">
-        <tr>
-          <th className="pl-2">Task</th>
-          <th>Tags</th>
-          <th>Due</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {data!.map(t =>
-          <tr className="word-break even:bg-white odd:bg-slate-50 hover:bg-gray-200" key={t.id}>
-            <td className="w-1/2 pl-2">{t.text}</td>
-            <td>{t.tags.join(', ')}</td>
-            <td>{new Date(t.due).getUTCFullYear() == 1 ? '': new Date(t.due).toDateString()}</td>
-            <td className="w-0"><RemoveTaskDialog task={t} /></td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+    <div className="w-full">
+      <Table className="w-full">
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id} colSpan={header.colSpan}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

@@ -15,6 +15,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "./components/ui/badge";
+import EditTaskDialog from "./EditTaskDialog";
 
 export interface Task {
   id: number;
@@ -54,8 +55,8 @@ const columns: ColumnDef<Task>[] = [
     },
     cell: props => {
       return (
-        <div>
-          {(props.getValue() as string[]).map(t => <Badge key={t} variant="outline">{t}</Badge>)}
+        <div className="flex flex-row items-center gap-1">
+          {(props.getValue() as string[]).filter(t => t !== "").map(t => <Badge key={t} variant="outline" className="font-normal">{t}</Badge>)}
         </div>
       );
     },
@@ -86,11 +87,12 @@ const columns: ColumnDef<Task>[] = [
     }
   },
   {
-    id: "remove",
+    id: "actions",
     cell: ({ row }) => {
       const task = row.original;
       return (
-        <div className="w-4">
+        <div className="w-12 flex flex-row items-center gap-2">
+          <EditTaskDialog task={task} />
           <RemoveTaskDialog task={task} />
         </div>
       )

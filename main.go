@@ -53,6 +53,7 @@ func main() {
 	mux.HandleFunc("GET /task", server.getAllTasksHandler)
 
 	mux.Handle("DELETE /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
+	mux.Handle("PUT /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.editTaskHandler), server.users))
 	mux.HandleFunc("OPTIONS /task/{id}", func(w http.ResponseWriter, r *http.Request) {})
 	mux.Handle("POST /task", middleware.BasicAuth(http.HandlerFunc(server.createTaskHandler), server.users))
 	mux.HandleFunc("OPTIONS /task", func(w http.ResponseWriter, r *http.Request) {})
@@ -149,6 +150,23 @@ func (s TaskServer) deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = s.tasks.DeleteTask(id)
+	if err != nil {
+		handleError(w, r, err)
+	}
+}
+
+func (s TaskServer) editTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	updateTask := &tasks.Task{}
+	if !parseJSON(w, r, updateTask) {
+		return
+	}
+
+	err = s.tasks.UpdateTask(id, updateTask)
 	if err != nil {
 		handleError(w, r, err)
 	}

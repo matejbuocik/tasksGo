@@ -17,6 +17,7 @@ type Tasker interface {
 	CreateTask(newTask *Task) (*Task, error)
 	DeleteTask(id int) error
 	GetAllTasks() ([]Task, error)
+	UpdateTask(id int, updateTask *Task) error
 }
 
 type taskRepo struct {
@@ -47,6 +48,15 @@ func (t taskRepo) CreateTask(newTask *Task) (*Task, error) {
 	}
 	newTask.Id = int(id)
 	return newTask, nil
+}
+
+func (t taskRepo) UpdateTask(id int, updateTask *Task) error {
+	_, err := t.db.Exec(`update task set text=?, tags=?, due=? where id=?`,
+		updateTask.Text, strings.Join(updateTask.Tags, ","), updateTask.Due.Unix(), id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (t taskRepo) DeleteTask(id int) error {

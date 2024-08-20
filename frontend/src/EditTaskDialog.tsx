@@ -1,18 +1,18 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-  DialogDescription,
-} from "@/components/ui/dialog"
-
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-
-import { Button } from "@/components/ui/button"
+import { Task } from "./TaskTable";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { createTaskSchema } from "./CreateTaskDialog";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { Tag, TagInput } from 'emblor';
+import { useToast } from "@/components/ui/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -20,53 +20,41 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/form";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { Tag, TagInput } from 'emblor';
-import { useState } from "react"
-import { useQueryClient, useMutation } from "@tanstack/react-query"
-import { useToast } from "@/components/ui/use-toast"
+} from "@/components/ui/popover";
+import { Input } from "./components/ui/input";
 
-export const createTaskSchema = z.object({
-  text: z.string().min(1, 'Task should have at least 1 letter.'),
-  due: z.date().optional(),
-  tags: z.array(
-    z.string().min(1, 'Tag should not be empty.')
-  ).optional(),
-})
-
-export default function CreateTaskDialog() {
+export default function EditTaskDialog({ task }: { task: Task }) {
+  const due = new Date(task.due).getUTCFullYear() == 1 ? undefined : new Date(task.due);
   const form = useForm<z.infer<typeof createTaskSchema>>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
-      text: "",
+      text: task.text,
+      tags: task.tags,
+      due
     },
   });
 
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [open, setOpen] = useState(false);
+  const [tags, setTags] = useState<Tag[]>(task.tags.map(t => ({ id: `edit-${t}`, text: t })));
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
 
-  const createTask = async (task: z.infer<typeof createTaskSchema>) => {
+  const editTask = async ({ id, task }: { id: number, task: z.infer<typeof createTaskSchema> }) => {
     const headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
     headers.set('Content-Type', 'application/json');
-    const res = await fetch(`https://localhost:8080/task`, { method: 'POST', headers, body: JSON.stringify(task) });
+    const res = await fetch(`https://localhost:8080/task/${id}`, { method: 'PUT', headers, body: JSON.stringify(task) });
     if (!res.ok) {
       throw new Error("Something went wrong");
     }
   }
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: createTask,
+    mutationFn: editTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
@@ -74,32 +62,20 @@ export default function CreateTaskDialog() {
 
   const { toast } = useToast();
   function onSubmit(values: z.infer<typeof createTaskSchema>) {
-    if (!values.tags) {
-      values.tags = [];
-    }
-    if (!values.tags?.find(t => t == "todo")) {
-      values.tags.push("todo");
-    }
-
-    mutation.mutate(values, {
-      onSuccess: () => toast({ description: "Task created ✅", duration: 3000 }),
-      onError: () => toast({ description: "Could not create task, please try again later.", duration: 3000, variant: "destructive" }),
+    mutation.mutate({ id: task.id, task: values }, {
+      onSuccess: () => { toast({ description: "Task updated ✅", duration: 3000 }); setOpen(false); },
+      onError: () => toast({ description: "Could not update task, please try again later.", duration: 3000, variant: "destructive" }),
     });
-
-    form.reset();
-    setTags([]);
-    setActiveTagIndex(null);
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className='mb-8 text-xl w-48'>Add Task</Button>
+        <Button variant='secondary'>Edit</Button>
       </DialogTrigger>
-
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create new task</DialogTitle>
+          <DialogTitle>Edit task</DialogTitle>
           <DialogDescription />
         </DialogHeader>
 
@@ -191,11 +167,10 @@ export default function CreateTaskDialog() {
               )}
             />
 
-            {form.formState.isValid && <DialogClose asChild><Button type="submit">Submit</Button></DialogClose>}
-            {!form.formState.isValid && <Button type="submit">Submit</Button>}
+            <Button type="submit">Submit</Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

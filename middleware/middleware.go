@@ -66,7 +66,7 @@ var originAllowlist = []string{
 	"http://localhost:5173",
 }
 
-var methodAllowlist = []string{"GET", "POST", "DELETE", "OPTIONS"}
+var methodAllowlist = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 var headerAllowlist = []string{"Authorization", "Content-Type"}
 
 func CheckCORS(next http.Handler) http.Handler {

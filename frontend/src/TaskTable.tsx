@@ -157,7 +157,7 @@ export default function TaskTable() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full pb-12">
       <Table className="w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

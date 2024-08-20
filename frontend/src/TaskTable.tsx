@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Badge } from "./components/ui/badge";
 import EditTaskDialog from "./EditTaskDialog";
+import dayjs from "dayjs";
 
 export interface Task {
   id: number;
@@ -65,12 +66,28 @@ const columns: ColumnDef<Task>[] = [
   {
     accessorKey: "due",
     cell: props => {
-      const date = new Date((props.getValue() as string));
-      if (date.getUTCFullYear() == 1) {
+      const date = dayjs(props.getValue() as string);
+      if (date.year() == 1) {
+        // task without date
         return "";
-      } else {
-        return date.toDateString();
       }
+
+      const today = dayjs();
+      const dateString = date.toDate().toDateString();
+
+      if (today.isAfter(date, 'day')) {
+        return dateString;
+      }
+
+      if (today.isSame(date, 'day')) {
+        return `${dateString} (today)`;
+      }
+
+      if (date.diff(today, 'day') === 0) {
+        return `${dateString} (1 day remaining)`
+      }
+
+      return `${dateString} (${date.diff(today, 'day') + 1} days remaining)`;
     },
     header: ({ column }) => {
       const isSorted = column.getIsSorted();
@@ -101,11 +118,9 @@ const columns: ColumnDef<Task>[] = [
 ]
 
 export default function TaskTable() {
-  // pridat days remaining, priorita, cele to upravit
   // ked ostava najeaky cas (nastaveny), poslat mail
   // pripojenie s google kalendarom??
-  // farba tasku / podla tagu
-  // upozornenie na zostavajuce dni (ikonka co meni farbu)
+  // farba tasku / podla tagu, priorita
 
   const getTasks = async () => {
     const res = await fetch('https://localhost:8080/task');

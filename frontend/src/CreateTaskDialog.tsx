@@ -4,12 +4,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -31,31 +30,41 @@ import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
-import { Tag, TagInput } from 'emblor';
-import { useState } from "react"
 import { useQueryClient, useMutation } from "@tanstack/react-query"
 import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react"
 
 export const createTaskSchema = z.object({
-  text: z.string().min(1, 'Task should have at least 1 letter.'),
+  text: z.string().min(1, { message: 'Task should have at least 1 letter.' }),
   due: z.date().optional(),
   tags: z.array(
-    z.string().min(1, 'Tag should not be empty.')
-  ).optional(),
+    z.object({
+      tag: z.string().min(1, { message: 'Tag should not be empty.' }),
+    }),
+  ),
 })
+
+export interface TaskCreate {
+  text: string;
+  tags: string[];
+  due?: Date;
+}
 
 export default function CreateTaskDialog() {
   const form = useForm<z.infer<typeof createTaskSchema>>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
       text: "",
+      due: undefined,
+      tags: [{ tag: "todo" }]
     },
   });
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "tags",
+  });
 
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
-
-  const createTask = async (task: z.infer<typeof createTaskSchema>) => {
+  const createTask = async (task: TaskCreate) => {
     const headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
     headers.set('Content-Type', 'application/json');
@@ -72,29 +81,25 @@ export default function CreateTaskDialog() {
     },
   });
 
+  const [open, setOpen] = useState(false);
+
   const { toast } = useToast();
   function onSubmit(values: z.infer<typeof createTaskSchema>) {
-    if (!values.tags) {
-      values.tags = [];
-    }
-    if (!values.tags?.find(t => t == "todo")) {
-      values.tags.push("todo");
-    }
-
-    mutation.mutate(values, {
-      onSuccess: () => toast({ description: "Task created ✅", duration: 3000 }),
+    const newTask = {
+      text: values.text,
+      tags: values.tags.map(t => t.tag),
+      due: values.due,
+    };
+    mutation.mutate(newTask, {
+      onSuccess: () => { toast({ description: "Task created ✅", duration: 3000 }); setOpen(false); form.reset(); },
       onError: () => toast({ description: "Could not create task, please try again later.", duration: 3000, variant: "destructive" }),
     });
-
-    form.reset();
-    setTags([]);
-    setActiveTagIndex(null);
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className='mb-8 text-xl w-48'>Add Task</Button>
+        <Button type="button" className='mb-8 text-xl w-48'>Add Task</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
@@ -129,6 +134,7 @@ export default function CreateTaskDialog() {
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
+                          type="button"
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal",
@@ -168,31 +174,30 @@ export default function CreateTaskDialog() {
             <FormField
               control={form.control}
               name="tags"
-              render={({ field }) => (
+              render={() => (
                 <FormItem className="flex flex-col items-start">
                   <FormLabel className="text-left">Tags</FormLabel>
                   <FormControl className="w-full">
-                    <TagInput
-                      {...field}
-                      placeholder="Enter a tag"
-                      tags={tags}
-                      className="sm:min-w-[450px]"
-                      setTags={(newTags) => {
-                        setTags(newTags);
-                        form.setValue('tags', (newTags as Tag[]).map(t => t.text));
-                      }}
-                      activeTagIndex={activeTagIndex}
-                      setActiveTagIndex={setActiveTagIndex}
-                      styleClasses={{ input: 'h-10 w-full focus:border-[3px] focus:border-black', tag: { body: 'h-10' } }}
-                    />
+                    <div className="flex flex-col gap-2">
+                      {fields.map((field, index) => (
+                        <div>
+                          <div key={field.id} className="flex flex-row items-center gap-1">
+                            <Input {...form.register(`tags.${index}.tag` as const)} />
+                            <Button type="button" variant="destructive" onClick={() => remove(index)}>X</Button>
+                          </div>
+                          {form.formState.errors.tags?.at?.(index) &&
+                            <div className="mt-1 text-sm text-destructive">Tag should not be empty.</div>
+                          }
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" onClick={() => append({ tag: "" })} className="w-12">+</Button>
+                    </div>
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {form.formState.isValid && <DialogClose asChild><Button type="submit">Submit</Button></DialogClose>}
-            {!form.formState.isValid && <Button type="submit">Submit</Button>}
+            <Button type="submit">Submit</Button>
           </form>
         </Form>
       </DialogContent>

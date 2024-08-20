@@ -2,16 +2,15 @@ import { Task } from "./TaskTable";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { createTaskSchema } from "./CreateTaskDialog";
+import { TaskCreate, createTaskSchema } from "./CreateTaskDialog";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
-import { Tag, TagInput } from 'emblor';
 import { useToast } from "@/components/ui/use-toast";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -32,18 +31,20 @@ export default function EditTaskDialog({ task }: { task: Task }) {
   const due = new Date(task.due).getUTCFullYear() == 1 ? undefined : new Date(task.due);
   const form = useForm<z.infer<typeof createTaskSchema>>({
     resolver: zodResolver(createTaskSchema),
-    defaultValues: {
+    values: {
       text: task.text,
-      tags: task.tags,
+      tags: task.tags.map(tag => ({ tag })),
       due
     },
   });
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "tags",
+  });
 
   const [open, setOpen] = useState(false);
-  const [tags, setTags] = useState<Tag[]>(task.tags.map(t => ({ id: `edit-${t}`, text: t })));
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
 
-  const editTask = async ({ id, task }: { id: number, task: z.infer<typeof createTaskSchema> }) => {
+  const editTask = async ({ id, task }: { id: number, task: TaskCreate }) => {
     const headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
     headers.set('Content-Type', 'application/json');
@@ -62,7 +63,12 @@ export default function EditTaskDialog({ task }: { task: Task }) {
 
   const { toast } = useToast();
   function onSubmit(values: z.infer<typeof createTaskSchema>) {
-    mutation.mutate({ id: task.id, task: values }, {
+    const editTask = {
+      text: values.text,
+      tags: values.tags.map(t => t.tag),
+      due: values.due,
+    };
+    mutation.mutate({ id: task.id, task: editTask }, {
       onSuccess: () => { toast({ description: "Task updated ✅", duration: 3000 }); setOpen(false); },
       onError: () => toast({ description: "Could not update task, please try again later.", duration: 3000, variant: "destructive" }),
     });
@@ -144,25 +150,25 @@ export default function EditTaskDialog({ task }: { task: Task }) {
             <FormField
               control={form.control}
               name="tags"
-              render={({ field }) => (
+              render={() => (
                 <FormItem className="flex flex-col items-start">
                   <FormLabel className="text-left">Tags</FormLabel>
                   <FormControl className="w-full">
-                    <TagInput
-                      {...field}
-                      placeholder="Enter a tag"
-                      tags={tags}
-                      className="sm:min-w-[450px]"
-                      setTags={(newTags) => {
-                        setTags(newTags);
-                        form.setValue('tags', (newTags as Tag[]).map(t => t.text));
-                      }}
-                      activeTagIndex={activeTagIndex}
-                      setActiveTagIndex={setActiveTagIndex}
-                      styleClasses={{ input: 'h-10 w-full focus:border-[3px] focus:border-black', tag: { body: 'h-10' } }}
-                    />
+                    <div className="flex flex-col gap-2">
+                      {fields.map((field, index) => (
+                        <div>
+                          <div key={field.id} className="flex flex-row items-center gap-1">
+                            <Input {...form.register(`tags.${index}.tag` as const)} />
+                            <Button type="button" variant="destructive" onClick={() => remove(index)}>X</Button>
+                          </div>
+                          {form.formState.errors.tags?.at?.(index) &&
+                            <div className="mt-1 text-sm text-destructive">Tag should not be empty.</div>
+                          }
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" onClick={() => append({ tag: "" })} className="w-12">+</Button>
+                    </div>
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />

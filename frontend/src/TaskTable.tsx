@@ -55,7 +55,7 @@ const columns: ColumnDef<Task>[] = [
     },
     cell: props => {
       return (
-        <div className="flex flex-row items-center gap-1">
+        <div className="flex flex-col sm:flex-row justify-start gap-1">
           {(props.getValue() as string[]).map(t => <Badge key={t} variant="outline" className="font-normal">{t}</Badge>)}
         </div>
       );
@@ -84,14 +84,14 @@ const columns: ColumnDef<Task>[] = [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
-    }
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const task = row.original;
       return (
-        <div className="w-12 flex flex-row items-center gap-2">
+        <div className="flex flex-col sm:flex-row justify-end gap-2">
           <EditTaskDialog task={task} />
           <RemoveTaskDialog task={task} />
         </div>

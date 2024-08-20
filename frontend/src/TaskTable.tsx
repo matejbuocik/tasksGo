@@ -56,7 +56,7 @@ const columns: ColumnDef<Task>[] = [
     cell: props => {
       return (
         <div className="flex flex-row items-center gap-1">
-          {(props.getValue() as string[]).filter(t => t !== "").map(t => <Badge key={t} variant="outline" className="font-normal">{t}</Badge>)}
+          {(props.getValue() as string[]).map(t => <Badge key={t} variant="outline" className="font-normal">{t}</Badge>)}
         </div>
       );
     },

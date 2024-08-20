@@ -81,7 +81,11 @@ func (t taskRepo) GetAllTasks() ([]Task, error) {
 			return nil, err
 		}
 
-		task.Tags = strings.Split(tags, ",")
+		if tags == "" {
+			task.Tags = make([]string, 0)
+		} else {
+			task.Tags = strings.Split(tags, ",")
+		}
 		task.Due = time.Unix(due, 0).UTC()
 
 		tasks = append(tasks, task)

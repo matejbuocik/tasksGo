@@ -33,22 +33,7 @@ import { Calendar as CalendarIcon } from "lucide-react"
 import { useQueryClient, useMutation } from "@tanstack/react-query"
 import { useToast } from "@/components/ui/use-toast"
 import { useState } from "react"
-
-export const createTaskSchema = z.object({
-  text: z.string().min(1, { message: 'Task should have at least 1 letter.' }),
-  due: z.date().optional(),
-  tags: z.array(
-    z.object({
-      tag: z.string().min(1, { message: 'Tag should not be empty.' }),
-    }),
-  ),
-})
-
-export interface TaskCreate {
-  text: string;
-  tags: string[];
-  due?: Date;
-}
+import { createTask, createTaskSchema } from "./task"
 
 export default function CreateTaskDialog() {
   const form = useForm<z.infer<typeof createTaskSchema>>({
@@ -64,15 +49,6 @@ export default function CreateTaskDialog() {
     name: "tags",
   });
 
-  const createTask = async (task: TaskCreate) => {
-    const headers = new Headers();
-    headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
-    headers.set('Content-Type', 'application/json');
-    const res = await fetch(`https://localhost:8080/task`, { method: 'POST', headers, body: JSON.stringify(task) });
-    if (!res.ok) {
-      throw new Error("Something went wrong");
-    }
-  }
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: createTask,

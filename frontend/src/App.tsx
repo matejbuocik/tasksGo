@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   // TODO login
+  // TODO Dockerfile build, servovat z go servera + nginx
+  // TODO Deploy + CI/CD (Google cloud?)
   const springsHeading = useSpring({
     from: { opacity: 0, fontSize: '0rem' },
     to: { opacity: 1, fontSize: '5rem' },

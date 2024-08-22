@@ -20,14 +20,7 @@ import dayjs from "dayjs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "./components/ui/label";
 import TaskDoneButton from "./TaskDoneButton";
-
-export interface Task {
-  id: number;
-  text: string;
-  tags: string[];
-  due: string;
-  done: boolean;
-}
+import { Task, getDoneTasks, getTodoTasks } from "./task";
 
 const columns: ColumnDef<Task>[] = [
   {
@@ -122,10 +115,6 @@ const columns: ColumnDef<Task>[] = [
   }
 ]
 
-const TodoTasksURL = 'https://localhost:8080/todo';
-const DoneTasksURL = 'https://localhost:8080/done';
-const AllTasksURL = 'https://localhost:8080/task';
-
 export default function TaskTable() {
   // ked ostava najeaky cas (nastaveny), poslat mail
   // pripojenie s google kalendarom??
@@ -133,16 +122,9 @@ export default function TaskTable() {
 
   const [doneTasksChecked, setDoneTasksChecked] = useState(false);
 
-  const getTasks = async (url: string) => {
-    const res = await fetch(url);
-    if (res.ok) {
-      return res.json() as Promise<Task[]>;
-    }
-    throw new Error("Something went wrong");
-  }
   const { data, error, isLoading } = useQuery({
     queryKey: ['tasks', doneTasksChecked],
-    queryFn: doneTasksChecked ? () => getTasks(DoneTasksURL) : () => getTasks(TodoTasksURL)
+    queryFn: doneTasksChecked ? getDoneTasks : getTodoTasks
   });
 
   const [sorting, setSorting] = useState<SortingState>([])

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button"
-import { Task } from "./TaskTable";
+import { Task, removeTask } from "./task";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,14 +19,6 @@ interface RemoveTaskProps {
 }
 
 export default function RemoveTaskDialog({ task }: RemoveTaskProps) {
-  const removeTask = async (id: number) => {
-    const headers = new Headers();
-    headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
-    const res = await fetch(`https://localhost:8080/task/${id}`, { method: 'DELETE', headers });
-    if (!res.ok) {
-      throw new Error("Something went wrong");
-    }
-  }
   const queryClient = useQueryClient()
   const mutation = useMutation({
     mutationFn: removeTask,

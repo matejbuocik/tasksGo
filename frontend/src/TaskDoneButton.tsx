@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { Task } from "./TaskTable";
+import { Task, editTask } from "./task";
 import { Button } from "./components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./components/ui/use-toast";
@@ -12,18 +12,9 @@ export default function TaskDoneButton({ task }: { task: Task }) {
     checkClass = "text-background";
   }
 
-  const setDone = async ({ id, task }: { id: number, task: Task }) => {
-    const headers = new Headers();
-    headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
-    headers.set('Content-Type', 'application/json');
-    const res = await fetch(`https://localhost:8080/task/${id}`, { method: 'PUT', headers, body: JSON.stringify(task) });
-    if (!res.ok) {
-      throw new Error("Something went wrong");
-    }
-  }
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: setDone,
+    mutationFn: editTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },

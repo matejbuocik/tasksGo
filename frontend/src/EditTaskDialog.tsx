@@ -1,8 +1,7 @@
-import { Task } from "./TaskTable";
+import { Task, createTaskSchema, editTask } from "./task";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { TaskCreate, createTaskSchema } from "./CreateTaskDialog";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar } from "@/components/ui/calendar"
@@ -44,15 +43,6 @@ export default function EditTaskDialog({ task }: { task: Task }) {
 
   const [open, setOpen] = useState(false);
 
-  const editTask = async ({ id, task }: { id: number, task: TaskCreate }) => {
-    const headers = new Headers();
-    headers.set('Authorization', 'Basic ' + btoa('admin' + ":" + 'adminkooo'));
-    headers.set('Content-Type', 'application/json');
-    const res = await fetch(`https://localhost:8080/task/${id}`, { method: 'PUT', headers, body: JSON.stringify(task) });
-    if (!res.ok) {
-      throw new Error("Something went wrong");
-    }
-  }
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: editTask,

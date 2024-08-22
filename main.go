@@ -59,6 +59,9 @@ func main() {
 	mux.HandleFunc("OPTIONS /task", func(w http.ResponseWriter, r *http.Request) {})
 
 	mux.Handle("POST /register", middleware.BasicAuth(http.HandlerFunc(server.registerHandler), server.users))
+	// mux.HandleFunc("POST /register", server.registerHandler)
+
+	mux.Handle("/", http.FileServer(http.Dir("./static")))
 
 	handler := middleware.Logging(mux)
 	handler = middleware.CheckCORS(handler)
@@ -134,6 +137,17 @@ func (s TaskServer) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s TaskServer) getAllTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tags := r.URL.Query()["tag"]
+	if len(tags) > 0 {
+		tasks, err := s.tasks.GetByTags(tags)
+		if err != nil {
+			handleError(w, r, err)
+			return
+		}
+		renderJSON(w, r, tasks)
+		return
+	}
+
 	allTasks, err := s.tasks.GetAllTasks()
 	if err != nil {
 		handleError(w, r, err)

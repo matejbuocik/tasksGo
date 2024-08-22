@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -18,6 +19,7 @@ type Tasker interface {
 	DeleteTask(id int) error
 	GetAllTasks() ([]Task, error)
 	UpdateTask(id int, updateTask *Task) error
+	GetByTags(tags []string) ([]Task, error)
 }
 
 type taskRepo struct {
@@ -70,6 +72,36 @@ func (t taskRepo) GetAllTasks() ([]Task, error) {
 		return nil, err
 	}
 
+	tasks, err := t.getTasksFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+func (t taskRepo) GetByTags(tags []string) ([]Task, error) {
+	var sb strings.Builder
+	sb.WriteString("select * from task where ")
+	for i, tag := range tags {
+		sb.WriteString(fmt.Sprintf("tags like '%%%s%%'", tag))
+		if i < len(tags)-1 {
+			sb.WriteString(" or ")
+		}
+	}
+
+	rows, err := t.db.Query(sb.String())
+	if err != nil {
+		return nil, err
+	}
+
+	tasks, err := t.getTasksFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+func (t taskRepo) getTasksFromRows(rows *sql.Rows) ([]Task, error) {
 	tasks := make([]Task, 0)
 
 	for rows.Next() {
@@ -90,7 +122,7 @@ func (t taskRepo) GetAllTasks() ([]Task, error) {
 
 		tasks = append(tasks, task)
 	}
-	if err = rows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 

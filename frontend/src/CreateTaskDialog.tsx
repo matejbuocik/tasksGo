@@ -56,7 +56,7 @@ export default function CreateTaskDialog() {
     defaultValues: {
       text: "",
       due: undefined,
-      tags: [{ tag: "todo" }]
+      tags: []
     },
   });
   const { fields, append, remove } = useFieldArray({
@@ -180,8 +180,8 @@ export default function CreateTaskDialog() {
                   <FormControl className="w-full">
                     <div className="flex flex-col gap-2">
                       {fields.map((field, index) => (
-                        <div>
-                          <div key={field.id} className="flex flex-row items-center gap-1">
+                        <div key={field.id}>
+                          <div className="flex flex-row items-center gap-1">
                             <Input {...form.register(`tags.${index}.tag` as const)} />
                             <Button type="button" variant="destructive" onClick={() => remove(index)}>X</Button>
                           </div>

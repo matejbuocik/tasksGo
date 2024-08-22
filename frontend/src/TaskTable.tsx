@@ -19,12 +19,14 @@ import EditTaskDialog from "./EditTaskDialog";
 import dayjs from "dayjs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "./components/ui/label";
+import TaskDoneButton from "./TaskDoneButton";
 
 export interface Task {
   id: number;
   text: string;
   tags: string[];
   due: string;
+  done: boolean;
 }
 
 const columns: ColumnDef<Task>[] = [
@@ -111,6 +113,7 @@ const columns: ColumnDef<Task>[] = [
       const task = row.original;
       return (
         <div className="flex flex-col sm:flex-row justify-end gap-2">
+          <TaskDoneButton task={task} />
           <EditTaskDialog task={task} />
           <RemoveTaskDialog task={task} />
         </div>
@@ -119,7 +122,8 @@ const columns: ColumnDef<Task>[] = [
   }
 ]
 
-const TodoTasksURL = 'https://localhost:8080/task?tag=todo';
+const TodoTasksURL = 'https://localhost:8080/todo';
+const DoneTasksURL = 'https://localhost:8080/done';
 const AllTasksURL = 'https://localhost:8080/task';
 
 export default function TaskTable() {
@@ -127,7 +131,7 @@ export default function TaskTable() {
   // pripojenie s google kalendarom??
   // farba tasku / podla tagu, priorita
 
-  const [allTasksChecked, setAllTasksChecked] = useState(false);
+  const [doneTasksChecked, setDoneTasksChecked] = useState(false);
 
   const getTasks = async (url: string) => {
     const res = await fetch(url);
@@ -137,8 +141,8 @@ export default function TaskTable() {
     throw new Error("Something went wrong");
   }
   const { data, error, isLoading } = useQuery({
-    queryKey: ['tasks', allTasksChecked],
-    queryFn: allTasksChecked ? () => getTasks(AllTasksURL) : () => getTasks(TodoTasksURL)
+    queryKey: ['tasks', doneTasksChecked],
+    queryFn: doneTasksChecked ? () => getTasks(DoneTasksURL) : () => getTasks(TodoTasksURL)
   });
 
   const [sorting, setSorting] = useState<SortingState>([])
@@ -170,8 +174,8 @@ export default function TaskTable() {
     <div className="w-full pb-12 flex flex-col items-end">
       <div className="flex items-center gap-2">
         <Label htmlFor="all-tasks">Todo</Label>
-        <Switch id="all-tasks" checked={allTasksChecked} onCheckedChange={(c) => setAllTasksChecked(c)} />
-        <Label htmlFor="all-tasks">All</Label>
+        <Switch id="all-tasks" checked={doneTasksChecked} onCheckedChange={(c) => setDoneTasksChecked(c)} />
+        <Label htmlFor="all-tasks">Done</Label>
       </div>
 
       <Table className="w-full">

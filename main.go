@@ -51,6 +51,8 @@ func main() {
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /task", server.getAllTasksHandler)
+	mux.HandleFunc("GET /todo", server.getTodoTasksHandler)
+	mux.HandleFunc("GET /done", server.getDoneTasksHandler)
 
 	mux.Handle("DELETE /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
 	mux.Handle("PUT /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.editTaskHandler), server.users))
@@ -154,6 +156,24 @@ func (s TaskServer) getAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderJSON(w, r, allTasks)
+}
+
+func (s TaskServer) getTodoTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks, err := s.tasks.GetByDone(false)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+	renderJSON(w, r, tasks)
+}
+
+func (s TaskServer) getDoneTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks, err := s.tasks.GetByDone(true)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+	renderJSON(w, r, tasks)
 }
 
 func (s TaskServer) deleteTaskHandler(w http.ResponseWriter, r *http.Request) {

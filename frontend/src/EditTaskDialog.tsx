@@ -133,12 +133,6 @@ export default function EditTaskDialog({ task }: { task: Task }) {
                         weekStartsOn={1}
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => {
-                          const now = new Date();
-                          return (date.getFullYear() < now.getFullYear()
-                            || (date.getFullYear() === now.getFullYear() && date.getMonth() < now.getMonth())
-                            || (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() < now.getDate()));
-                        }}
                         initialFocus
                       />
                     </PopoverContent>

@@ -67,6 +67,7 @@ export default function EditTaskDialog({ task }: { task: Task }) {
       text: values.text,
       tags: values.tags.map(t => t.tag),
       due: values.due,
+      done: task.done,
     };
     mutation.mutate({ id: task.id, task: editTask }, {
       onSuccess: () => { toast({ description: "Task updated ✅", duration: 3000 }); setOpen(false); },

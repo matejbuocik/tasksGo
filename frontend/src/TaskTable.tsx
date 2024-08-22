@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "./components/ui/badge";
 import EditTaskDialog from "./EditTaskDialog";
 import dayjs from "dayjs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "./components/ui/label";
 
 export interface Task {
   id: number;
@@ -117,19 +119,27 @@ const columns: ColumnDef<Task>[] = [
   }
 ]
 
+const TodoTasksURL = 'https://localhost:8080/task?tag=todo';
+const AllTasksURL = 'https://localhost:8080/task';
+
 export default function TaskTable() {
   // ked ostava najeaky cas (nastaveny), poslat mail
   // pripojenie s google kalendarom??
   // farba tasku / podla tagu, priorita
 
-  const getTasks = async () => {
-    const res = await fetch('https://localhost:8080/task');
+  const [allTasksChecked, setAllTasksChecked] = useState(false);
+
+  const getTasks = async (url: string) => {
+    const res = await fetch(url);
     if (res.ok) {
       return res.json() as Promise<Task[]>;
     }
     throw new Error("Something went wrong");
   }
-  const { data, error, isLoading } = useQuery({ queryKey: ['tasks'], queryFn: getTasks });
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['tasks', allTasksChecked],
+    queryFn: allTasksChecked ? () => getTasks(AllTasksURL) : () => getTasks(TodoTasksURL)
+  });
 
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -157,7 +167,13 @@ export default function TaskTable() {
   }
 
   return (
-    <div className="w-full pb-12">
+    <div className="w-full pb-12 flex flex-col items-end">
+      <div className="flex items-center gap-2">
+        <Label htmlFor="all-tasks">Todo</Label>
+        <Switch id="all-tasks" checked={allTasksChecked} onCheckedChange={(c) => setAllTasksChecked(c)} />
+        <Label htmlFor="all-tasks">All</Label>
+      </div>
+
       <Table className="w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

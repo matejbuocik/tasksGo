@@ -88,6 +88,7 @@ func (t taskRepo) GetByTags(tags []string) ([]Task, error) {
 			sb.WriteString(" or ")
 		}
 	}
+	sb.WriteString(" order by due asc")
 
 	rows, err := t.db.Query(sb.String())
 	if err != nil {

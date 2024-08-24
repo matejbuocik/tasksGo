@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/matejbuocik/tasksGo/middleware"
 	"github.com/matejbuocik/tasksGo/tasks"
@@ -65,7 +66,7 @@ func main() {
 
 	mux.Handle("POST /register", middleware.BasicAuth(http.HandlerFunc(server.registerHandler), server.users))
 	mux.HandleFunc("POST /login", server.loginHandler)
-	mux.Handle("POST /logout", middleware.SessionAuth(http.HandlerFunc(server.logoutHandler), server.users))
+	mux.HandleFunc("POST /logout", server.logoutHandler)
 
 	mux.Handle("/", http.FileServer(http.Dir("./static")))
 
@@ -139,6 +140,7 @@ func (s TaskServer) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, err)
 		return
 	}
+	w.WriteHeader(201)
 	renderJSON(w, r, newTask)
 }
 
@@ -244,15 +246,24 @@ func (s TaskServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:    "session_token",
-		Value:   session.Token,
-		Expires: session.Expiry,
+		Name:     "session_token",
+		Value:    session.Token,
+		Expires:  session.Expiry,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	})
 }
 
 func (s TaskServer) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Cookie("session_token")
-	if c != nil {
+	c, err := r.Cookie("session_token")
+	if err == nil && c != nil {
 		s.users.Logout(c.Value)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    "",
+			Expires:  time.Unix(0, 0),
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+		})
 	}
 }

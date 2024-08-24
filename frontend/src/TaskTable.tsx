@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "./components/ui/label";
 import TaskDoneButton from "./TaskDoneButton";
 import { Task, getDoneTasks, getTodoTasks } from "./task";
+import { useCookies } from "react-cookie";
 
 const columns: ColumnDef<Task>[] = [
   {
@@ -127,7 +128,8 @@ export default function TaskTable() {
     queryFn: doneTasksChecked ? getDoneTasks : getTodoTasks
   });
 
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [cookie] = useCookies(["session_token"]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
@@ -141,6 +143,9 @@ export default function TaskTable() {
     state: {
       sorting,
       columnFilters,
+      columnVisibility: {
+        actions: cookie.session_token !== undefined,
+      }
     },
   });
 

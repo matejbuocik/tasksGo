@@ -75,18 +75,13 @@ func CheckCORS(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headerAllowlist, ", "))
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			if isPreflight(r) && slices.Contains(methodAllowlist, method) {
+			// Check for preflight request
+			if r.Method == "OPTIONS" && origin != "" && slices.Contains(methodAllowlist, method) {
 				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methodAllowlist, ", "))
 			}
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func isPreflight(r *http.Request) bool {
-	return r.Method == "OPTIONS" &&
-		r.Header.Get("Origin") != "" &&
-		r.Header.Get("Access-Control-Request-Method") != ""
 }
 
 func SessionAuth(next http.Handler, u users.Userer) http.Handler {

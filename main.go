@@ -30,8 +30,24 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "OK")
 }
 
+var cookieMode = http.SameSiteStrictMode
+
 func main() {
-	db, err := sql.Open("sqlite3", "./db.sq3")
+	dbFile := flag.String("dbfile", "./db.sq3", "sqlite database file")
+	addr := flag.String("addr", "localhost:8080", "HTTPS network address")
+	certFile := flag.String("certfile", "cert.pem", "certificate PEM file")
+	keyFile := flag.String("keyfile", "key.pem", "key PEM file")
+	prod := flag.Bool("prod", true, "run server in production mode")
+	flag.Parse()
+
+	if !*prod {
+		log.Print("Running in dev mode")
+		cookieMode = http.SameSiteNoneMode
+	} else {
+		log.Print("Running in prod mode")
+	}
+
+	db, err := sql.Open("sqlite3", *dbFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,9 +76,10 @@ func main() {
 	mux.HandleFunc("OPTIONS /login", func(w http.ResponseWriter, r *http.Request) {})
 	mux.HandleFunc("OPTIONS /logout", func(w http.ResponseWriter, r *http.Request) {})
 
-	mux.Handle("DELETE /task/{id}", middleware.SessionAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
-	mux.Handle("PUT /task/{id}", middleware.SessionAuth(http.HandlerFunc(server.editTaskHandler), server.users))
-	mux.Handle("POST /task", middleware.SessionAuth(http.HandlerFunc(server.createTaskHandler), server.users))
+	sessionAuth := func(next http.Handler) http.Handler { return middleware.SessionAuth(next, server.users, cookieMode) }
+	mux.Handle("DELETE /task/{id}", sessionAuth(http.HandlerFunc(server.deleteTaskHandler)))
+	mux.Handle("PUT /task/{id}", sessionAuth(http.HandlerFunc(server.editTaskHandler)))
+	mux.Handle("POST /task", sessionAuth(http.HandlerFunc(server.createTaskHandler)))
 
 	mux.Handle("POST /register", middleware.BasicAuth(http.HandlerFunc(server.registerHandler), server.users))
 	mux.HandleFunc("POST /login", server.loginHandler)
@@ -71,13 +88,11 @@ func main() {
 	mux.Handle("/", http.FileServer(http.Dir("./static")))
 
 	handler := middleware.Logging(mux)
-	handler = middleware.CheckCORS(handler)
+	if !*prod {
+		handler = middleware.CheckCORS(handler)
+	}
 	handler = middleware.PanicRecovery(handler)
 
-	addr := flag.String("addr", "localhost:8080", "HTTPS network address")
-	certFile := flag.String("certfile", "cert.pem", "certificate PEM file")
-	keyFile := flag.String("keyfile", "key.pem", "key PEM file")
-	flag.Parse()
 	srv := &http.Server{
 		Addr:    *addr,
 		Handler: handler,
@@ -249,7 +264,7 @@ func (s TaskServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_token",
 		Value:    session.Token,
 		Expires:  session.Expiry,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: cookieMode,
 		Secure:   true,
 		Path:     "/",
 	})
@@ -263,7 +278,7 @@ func (s TaskServer) logoutHandler(w http.ResponseWriter, r *http.Request) {
 			Name:     "session_token",
 			Value:    "",
 			Expires:  time.Unix(0, 0),
-			SameSite: http.SameSiteNoneMode,
+			SameSite: cookieMode,
 			Secure:   true,
 			Path:     "/",
 		})

@@ -84,7 +84,7 @@ func CheckCORS(next http.Handler) http.Handler {
 	})
 }
 
-func SessionAuth(next http.Handler, u users.Userer) http.Handler {
+func SessionAuth(next http.Handler, u users.Userer, cookieMode http.SameSite) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("session_token")
 		if err != nil {
@@ -101,7 +101,7 @@ func SessionAuth(next http.Handler, u users.Userer) http.Handler {
 				Name:     "session_token",
 				Value:    "",
 				Expires:  time.Unix(0, 0),
-				SameSite: http.SameSiteNoneMode,
+				SameSite: cookieMode,
 				Secure:   true,
 				Path:     "/",
 			})

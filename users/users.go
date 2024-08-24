@@ -3,6 +3,7 @@ package users
 import (
 	"database/sql"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,6 +57,7 @@ func (u userRepo) Register(name string, pass string) error {
 }
 
 var sessions = map[string]*Session{}
+var sessionsLock = sync.RWMutex{}
 
 type Session struct {
 	Token    string
@@ -64,13 +66,17 @@ type Session struct {
 }
 
 func (u userRepo) CheckSession(sessionToken string) bool {
+	sessionsLock.RLock()
 	session, exists := sessions[sessionToken]
+	sessionsLock.RUnlock()
 	if !exists {
 		return false
 	}
 
 	if session.Expiry.Before(time.Now()) {
+		sessionsLock.Lock()
 		delete(sessions, sessionToken)
+		sessionsLock.Unlock()
 		return false
 	}
 
@@ -90,13 +96,18 @@ func (u userRepo) Login(name string, pass string) (*Session, bool) {
 		Username: user.Name,
 		Expiry:   expiresAt,
 	}
+
+	sessionsLock.Lock()
 	sessions[sessionToken] = session
+	sessionsLock.Unlock()
 
 	return session, true
 }
 
 func (u userRepo) Logout(sessionToken string) {
+	sessionsLock.Lock()
 	delete(sessions, sessionToken)
+	sessionsLock.Unlock()
 }
 
 func (u userRepo) VerifyUserPass(name string, pass string) *User {

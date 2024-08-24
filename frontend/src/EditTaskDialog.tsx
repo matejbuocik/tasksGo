@@ -77,7 +77,7 @@ export default function EditTaskDialog({ task }: { task: Task }) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col">
             <FormField
               control={form.control}
               name="text"
@@ -158,7 +158,7 @@ export default function EditTaskDialog({ task }: { task: Task }) {
               )}
             />
 
-            <Button type="submit">Submit</Button>
+            <Button type="submit" className="self-center w-32">Submit</Button>
           </form>
         </Form>
       </DialogContent>

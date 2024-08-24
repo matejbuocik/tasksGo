@@ -75,7 +75,7 @@ export default function CreateTaskDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" className="mb-8 text-xl w-48">Add Task</Button>
+        <Button type="button" className="mb-8 text-2xl w-48">Add Task</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
@@ -85,7 +85,7 @@ export default function CreateTaskDialog() {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col">
             <FormField
               control={form.control}
               name="text"
@@ -167,7 +167,7 @@ export default function CreateTaskDialog() {
               )}
             />
 
-            <Button type="submit">Submit</Button>
+            <Button type="submit" className="self-center w-32">Submit</Button>
           </form>
         </Form>
       </DialogContent>

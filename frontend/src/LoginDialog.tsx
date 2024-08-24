@@ -59,7 +59,7 @@ export default function LoginDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" className="mb-8 text-xl w-48">Login</Button>
+        <Button type="button" className="mb-8 text-2xl w-48">Login</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
@@ -69,7 +69,7 @@ export default function LoginDialog() {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col">
             <FormField
               control={form.control}
               name="name"
@@ -98,7 +98,7 @@ export default function LoginDialog() {
               )}
             />
 
-            <Button type="submit">Login</Button>
+            <Button type="submit" className="self-center w-32">Login</Button>
           </form>
         </Form>
       </DialogContent>

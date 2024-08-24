@@ -165,7 +165,7 @@ export default function TaskTable() {
         <Label htmlFor="all-tasks">Done</Label>
       </div>
 
-      <Table className="w-full">
+      <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

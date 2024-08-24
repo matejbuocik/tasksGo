@@ -26,11 +26,11 @@ function App() {
   })
 
   return (
-    <main className="m-auto flex flex-col items-center">
-      <animated.h1 className="m-0 pb-8 text-center" style={{ ...springsHeading }} onClick={() => mutation.mutate()}>
+    <main className="flex flex-col items-center">
+      <animated.h1 className="pb-4" style={{ ...springsHeading }} onClick={() => mutation.mutate()}>
         TasksGo!
       </animated.h1>
-      <animated.div style={{ ...springs }} className="flex flex-col items-center max-w-screen-xl w-full">
+      <animated.div style={{ ...springs }} className="flex flex-col items-center w-[95%] max-w-screen-xl">
         {cookie.session_token ? <CreateTaskDialog /> : <LoginDialog />}
         <TaskTable />
       </animated.div>

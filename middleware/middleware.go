@@ -97,6 +97,14 @@ func SessionAuth(next http.Handler, u users.Userer) http.Handler {
 		}
 
 		if !u.CheckSession(c.Value) {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_token",
+				Value:    "",
+				Expires:  time.Unix(0, 0),
+				SameSite: http.SameSiteNoneMode,
+				Secure:   true,
+				Path:     "/",
+			})
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

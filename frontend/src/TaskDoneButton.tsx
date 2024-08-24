@@ -27,7 +27,7 @@ export default function TaskDoneButton({ task }: { task: Task }) {
       done: !task.done,
     };
     mutation.mutate({ id: task.id, task: updatedTask }, {
-      onSuccess: () => toast({ description: task.done ? "Task done ✅" : "Task undone ❌", duration: 3000 }),
+      onSuccess: () => toast({ description: !task.done ? "Task done ✅" : "Task undone ❌", duration: 3000 }),
       onError: () => toast({ description: "Could not update task, please try again later.", duration: 3000, variant: "destructive" }),
     });
   }

@@ -47,12 +47,11 @@ func PanicRecovery(next http.Handler) http.Handler {
 }
 
 func BasicAuth(next http.Handler, u users.Userer) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		user, pass, ok := req.BasicAuth()
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
 		if ok {
 			if usr := u.VerifyUserPass(user, pass); usr != nil {
-				newctx := u.NewContext(req.Context(), usr)
-				next.ServeHTTP(w, req.WithContext(newctx))
+				next.ServeHTTP(w, r)
 				return
 			}
 		}
@@ -62,7 +61,6 @@ func BasicAuth(next http.Handler, u users.Userer) http.Handler {
 }
 
 var originAllowlist = []string{
-	"http://localhost:4173",
 	"http://localhost:5173",
 }
 
@@ -76,7 +74,7 @@ func CheckCORS(next http.Handler) http.Handler {
 		if slices.Contains(originAllowlist, origin) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headerAllowlist, ", "))
-			w.Header().Add("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			if isPreflight(r) && slices.Contains(methodAllowlist, method) {
 				w.Header().Set("Access-Control-Allow-Methods", strings.Join(methodAllowlist, ", "))
 			}
@@ -89,4 +87,25 @@ func isPreflight(r *http.Request) bool {
 	return r.Method == "OPTIONS" &&
 		r.Header.Get("Origin") != "" &&
 		r.Header.Get("Access-Control-Request-Method") != ""
+}
+
+func SessionAuth(next http.Handler, u users.Userer) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := r.Cookie("session_token")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if !u.CheckSession(c.Value) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

@@ -54,14 +54,18 @@ func main() {
 	mux.HandleFunc("GET /todo", server.getTodoTasksHandler)
 	mux.HandleFunc("GET /done", server.getDoneTasksHandler)
 
-	mux.Handle("DELETE /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
-	mux.Handle("PUT /task/{id}", middleware.BasicAuth(http.HandlerFunc(server.editTaskHandler), server.users))
 	mux.HandleFunc("OPTIONS /task/{id}", func(w http.ResponseWriter, r *http.Request) {})
-	mux.Handle("POST /task", middleware.BasicAuth(http.HandlerFunc(server.createTaskHandler), server.users))
 	mux.HandleFunc("OPTIONS /task", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("OPTIONS /login", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("OPTIONS /logout", func(w http.ResponseWriter, r *http.Request) {})
+
+	mux.Handle("DELETE /task/{id}", middleware.SessionAuth(http.HandlerFunc(server.deleteTaskHandler), server.users))
+	mux.Handle("PUT /task/{id}", middleware.SessionAuth(http.HandlerFunc(server.editTaskHandler), server.users))
+	mux.Handle("POST /task", middleware.SessionAuth(http.HandlerFunc(server.createTaskHandler), server.users))
 
 	mux.Handle("POST /register", middleware.BasicAuth(http.HandlerFunc(server.registerHandler), server.users))
-	// mux.HandleFunc("POST /register", server.registerHandler)
+	mux.HandleFunc("POST /login", server.loginHandler)
+	mux.Handle("POST /logout", middleware.SessionAuth(http.HandlerFunc(server.logoutHandler), server.users))
 
 	mux.Handle("/", http.FileServer(http.Dir("./static")))
 
@@ -224,5 +228,31 @@ func (s TaskServer) registerHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			handleError(w, r, err)
 		}
+	}
+}
+
+func (s TaskServer) loginHandler(w http.ResponseWriter, r *http.Request) {
+	user := &users.User{}
+	if !parseJSON(w, r, user) {
+		return
+	}
+
+	session, ok := s.users.Login(user.Name, user.Pass)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "session_token",
+		Value:   session.Token,
+		Expires: session.Expiry,
+	})
+}
+
+func (s TaskServer) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	c, _ := r.Cookie("session_token")
+	if c != nil {
+		s.users.Logout(c.Value)
 	}
 }

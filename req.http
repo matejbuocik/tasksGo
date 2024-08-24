@@ -1,6 +1,6 @@
 GET https://localhost:8080/task
 ###
-POST https://admin:adminkooo@localhost:8080/task
+POST https://localhost:8080/task
 content-type: application/json
 
 {
@@ -8,9 +8,7 @@ content-type: application/json
     "tags": []
 }
 ###
-GET https://localhost:8080/tag/todo
-###
-DELETE https://admin:adminkooo@localhost:8080/task/11
+DELETE https://admin:adminkooo@localhost:8080/task/16
 ###
 GET https://localhost:8080/health
 ###
@@ -21,3 +19,13 @@ content-type: application/json
     "name": "admin",
     "pass": "adminkooo"
 }
+###
+POST https://localhost:8080/login
+content-type: application/json
+
+{
+    "name": "admin",
+    "pass": "adminkooo"
+}
+###
+POST https://localhost:8080/logout

@@ -1,10 +1,11 @@
 package users
 
 import (
-	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,10 +19,9 @@ type User struct {
 type Userer interface {
 	Register(name string, pass string) error
 	VerifyUserPass(name string, pass string) *User
-	// NewContext returns a new Context that carries value usr.
-	NewContext(ctx context.Context, usr *User) context.Context
-	// FromContext returns the User value stored in ctx, if any.
-	FromContext(ctx context.Context) (*User, bool)
+	Login(name string, pass string) (session *Session, ok bool)
+	Logout(sessionToken string)
+	CheckSession(sessionToken string) bool
 }
 
 type userRepo struct {
@@ -55,6 +55,50 @@ func (u userRepo) Register(name string, pass string) error {
 	return nil
 }
 
+var sessions = map[string]*Session{}
+
+type Session struct {
+	Token    string
+	Username string
+	Expiry   time.Time
+}
+
+func (u userRepo) CheckSession(sessionToken string) bool {
+	session, exists := sessions[sessionToken]
+	if !exists {
+		return false
+	}
+
+	if session.Expiry.Before(time.Now()) {
+		delete(sessions, sessionToken)
+		return false
+	}
+
+	return true
+}
+
+func (u userRepo) Login(name string, pass string) (*Session, bool) {
+	user := u.VerifyUserPass(name, pass)
+	if user == nil {
+		return nil, false
+	}
+
+	sessionToken := uuid.NewString()
+	expiresAt := time.Now().Add(60 * time.Minute)
+	session := &Session{
+		Token:    sessionToken,
+		Username: user.Name,
+		Expiry:   expiresAt,
+	}
+	sessions[sessionToken] = session
+
+	return session, true
+}
+
+func (u userRepo) Logout(sessionToken string) {
+	delete(sessions, sessionToken)
+}
+
 func (u userRepo) VerifyUserPass(name string, pass string) *User {
 	row := u.db.QueryRow(`select * from user where name = ?`, name)
 	var user User
@@ -65,17 +109,4 @@ func (u userRepo) VerifyUserPass(name string, pass string) *User {
 		return nil
 	}
 	return &user
-}
-
-type key int
-
-var userKey key
-
-func (u userRepo) NewContext(ctx context.Context, usr *User) context.Context {
-	return context.WithValue(ctx, userKey, usr)
-}
-
-func (u userRepo) FromContext(ctx context.Context) (*User, bool) {
-	usr, ok := ctx.Value(userKey).(*User)
-	return usr, ok
 }

@@ -251,6 +251,7 @@ func (s TaskServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  session.Expiry,
 		SameSite: http.SameSiteNoneMode,
 		Secure:   true,
+		Path:     "/",
 	})
 }
 
@@ -264,6 +265,7 @@ func (s TaskServer) logoutHandler(w http.ResponseWriter, r *http.Request) {
 			Expires:  time.Unix(0, 0),
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
+			Path:     "/",
 		})
 	}
 }

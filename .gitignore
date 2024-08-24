@@ -1,2 +1,4 @@
 *.pem
 *.sq3
+static/
+build/

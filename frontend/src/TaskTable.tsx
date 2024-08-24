@@ -59,7 +59,7 @@ const columns: ColumnDef<Task>[] = [
         </div>
       );
     },
-    filterFn: 'arrIncludes',
+    filterFn: "arrIncludes",
   },
   {
     accessorKey: "due",
@@ -73,19 +73,19 @@ const columns: ColumnDef<Task>[] = [
       const today = dayjs();
       const dateString = date.toDate().toDateString();
 
-      if (today.isAfter(date, 'day')) {
+      if (today.isAfter(date, "day")) {
         return dateString;
       }
 
-      if (today.isSame(date, 'day')) {
+      if (today.isSame(date, "day")) {
         return `${dateString} (today)`;
       }
 
-      if (date.diff(today, 'day') === 0) {
+      if (date.diff(today, "day") === 0) {
         return `${dateString} (1 day remaining)`
       }
 
-      return `${dateString} (${date.diff(today, 'day') + 1} days remaining)`;
+      return `${dateString} (${date.diff(today, "day") + 1} days remaining)`;
     },
     header: ({ column }) => {
       const isSorted = column.getIsSorted();
@@ -124,7 +124,7 @@ export default function TaskTable() {
   const [doneTasksChecked, setDoneTasksChecked] = useState(false);
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ['tasks', doneTasksChecked],
+    queryKey: ["tasks", doneTasksChecked],
     queryFn: doneTasksChecked ? getDoneTasks : getTodoTasks
   });
 

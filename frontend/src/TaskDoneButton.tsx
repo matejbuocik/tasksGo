@@ -16,7 +16,7 @@ export default function TaskDoneButton({ task }: { task: Task }) {
   const mutation = useMutation({
     mutationFn: editTask,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 

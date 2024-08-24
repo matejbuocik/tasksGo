@@ -47,7 +47,7 @@ export default function EditTaskDialog({ task }: { task: Task }) {
   const mutation = useMutation({
     mutationFn: editTask,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 
@@ -68,7 +68,7 @@ export default function EditTaskDialog({ task }: { task: Task }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='secondary'>Edit</Button>
+        <Button variant="secondary">Edit</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

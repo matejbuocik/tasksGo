@@ -23,7 +23,7 @@ export default function RemoveTaskDialog({ task }: RemoveTaskProps) {
   const mutation = useMutation({
     mutationFn: removeTask,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   })
 
@@ -38,7 +38,7 @@ export default function RemoveTaskDialog({ task }: RemoveTaskProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant='destructive'>Remove</Button>
+        <Button variant="destructive">Remove</Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>

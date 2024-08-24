@@ -35,8 +35,8 @@ export default function LoginDialog() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      name: '',
-      pass: ''
+      name: "",
+      pass: ""
     },
   });
 
@@ -59,7 +59,7 @@ export default function LoginDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" className='mb-8 text-xl w-48'>Login</Button>
+        <Button type="button" className="mb-8 text-xl w-48">Login</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

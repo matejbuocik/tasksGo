@@ -53,7 +53,7 @@ export default function CreateTaskDialog() {
   const mutation = useMutation({
     mutationFn: createTask,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 
@@ -75,7 +75,7 @@ export default function CreateTaskDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" className='mb-8 text-xl w-48'>Add Task</Button>
+        <Button type="button" className="mb-8 text-xl w-48">Add Task</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

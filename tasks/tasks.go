@@ -98,15 +98,17 @@ func (t taskRepo) GetByDone(done bool) ([]Task, error) {
 func (t taskRepo) GetByTags(tags []string) ([]Task, error) {
 	var sb strings.Builder
 	sb.WriteString("select * from task where ")
+	anyTags := make([]any, len(tags))
 	for i, tag := range tags {
-		sb.WriteString(fmt.Sprintf("tags like '%%%s%%'", tag))
+		anyTags[i] = fmt.Sprintf("%%%s%%", tag)
+		sb.WriteString("tags like ?")
 		if i < len(tags)-1 {
 			sb.WriteString(" or ")
 		}
 	}
 	sb.WriteString(" order by due asc")
 
-	rows, err := t.db.Query(sb.String())
+	rows, err := t.db.Query(sb.String(), anyTags...)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_URL } from "./App";
 
 export const login = async (user: { name: string, pass: string }) => {
-    const res = await axios.post("https://localhost:8080/login", user, { withCredentials: true });
+    const res = await axios.post(`${API_URL}/login`, user, { withCredentials: true });
     if (res.status !== 200) {
         if (res.status === 401) {
             throw new Error("Login not succesful.");
@@ -12,7 +13,7 @@ export const login = async (user: { name: string, pass: string }) => {
 }
 
 export const logout = async () => {
-    const res = await axios.post("https://localhost:8080/logout", undefined, { withCredentials: true });
+    const res = await axios.post(`${API_URL}/logout`, undefined, { withCredentials: true });
     if (res.status !== 200) {
         if (res.status === 401) {
             throw new Error("Logout not succesful");

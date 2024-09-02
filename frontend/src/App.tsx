@@ -7,6 +7,8 @@ import { useMutation } from "@tanstack/react-query";
 import { logout } from "./login";
 import { useCookies } from "react-cookie";
 
+export const API_URL = import.meta.env.VITE_API_URL;
+
 function App() {
   // TODO Github CI test + deploy on push to main
   const springsHeading = useSpring({

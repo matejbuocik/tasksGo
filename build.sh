@@ -7,8 +7,8 @@ go build
 mv tasksGo build/
 
 cd frontend
+npm i
 npm run build
 mv dist ../build/static
 
-cd ../build
-./tasksGo
+cd ..

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import axios from "axios";
+import { API_URL } from "./App";
 
 export interface Task {
     id: number;
@@ -17,7 +18,7 @@ export interface TaskCreate {
 }
 
 export const getTodoTasks = async () => {
-    const res = await fetch("https://localhost:8080/todo");
+    const res = await fetch(`${API_URL}/todo`);
     if (res.ok) {
         return res.json() as Promise<Task[]>;
     }
@@ -25,7 +26,7 @@ export const getTodoTasks = async () => {
 }
 
 export const getDoneTasks = async () => {
-    const res = await fetch("https://localhost:8080/done");
+    const res = await fetch(`${API_URL}/done`);
     if (res.ok) {
         return res.json() as Promise<Task[]>;
     }
@@ -33,7 +34,7 @@ export const getDoneTasks = async () => {
 }
 
 export const getAllTasks = async () => {
-    const res = await fetch("https://localhost:8080/task");
+    const res = await fetch(`${API_URL}/task`);
     if (res.ok) {
         return res.json() as Promise<Task[]>;
     }
@@ -41,7 +42,7 @@ export const getAllTasks = async () => {
 }
 
 export const removeTask = async (id: number) => {
-    const res = await axios.delete(`https://localhost:8080/task/${id}`, { withCredentials: true })
+    const res = await axios.delete(`${API_URL}/task/${id}`, { withCredentials: true })
     if (res.status !== 200) {
         throw new Error("Something went wrong.");
     }
@@ -58,14 +59,14 @@ export const createTaskSchema = z.object({
 });
 
 export const createTask = async (task: TaskCreate) => {
-    const res = await axios.post(`https://localhost:8080/task`, task, { withCredentials: true });
+    const res = await axios.post(`${API_URL}/task`, task, { withCredentials: true });
     if (res.status !== 201) {
         throw new Error("Something went wrong.");
     }
 }
 
 export const editTask = async ({ id, task }: { id: number, task: TaskCreate }) => {
-    const res = await axios.put(`https://localhost:8080/task/${id}`, task, { withCredentials: true });
+    const res = await axios.put(`${API_URL}/task/${id}`, task, { withCredentials: true });
     if (res.status !== 200) {
         throw new Error("Something went wrong.");
     }

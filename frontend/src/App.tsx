@@ -8,8 +8,7 @@ import { logout } from "./login";
 import { useCookies } from "react-cookie";
 
 function App() {
-  // TODO Dockerfile build, servovat z go servera + nginx
-  // TODO Deploy + CI/CD (Google cloud?)
+  // TODO Github CI test + deploy on push to main
   const springsHeading = useSpring({
     from: { opacity: 0, fontSize: "0rem" },
     to: { opacity: 1, fontSize: "5rem" },

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"encoding/json"
 	"flag"
@@ -34,9 +33,9 @@ var cookieMode = http.SameSiteStrictMode
 
 func main() {
 	dbFile := flag.String("dbfile", "./db.sq3", "sqlite database file")
-	addr := flag.String("addr", "localhost:8080", "HTTPS network address")
-	certFile := flag.String("certfile", "cert.pem", "certificate PEM file")
-	keyFile := flag.String("keyfile", "key.pem", "key PEM file")
+	addr := flag.String("addr", "localhost:8080", "HTTP network address")
+	// certFile := flag.String("certfile", "cert.pem", "certificate PEM file")
+	// keyFile := flag.String("keyfile", "key.pem", "key PEM file")
 	prod := flag.Bool("prod", true, "run server in production mode")
 	flag.Parse()
 
@@ -96,13 +95,14 @@ func main() {
 	srv := &http.Server{
 		Addr:    *addr,
 		Handler: handler,
-		TLSConfig: &tls.Config{
-			MinVersion:               tls.VersionTLS13,
-			PreferServerCipherSuites: true,
-		},
+		// TLSConfig: &tls.Config{
+		// 	MinVersion:               tls.VersionTLS13,
+		// 	PreferServerCipherSuites: true,
+		// },
 	}
 	log.Printf("Starting server on %s", *addr)
-	log.Fatal(srv.ListenAndServeTLS(*certFile, *keyFile))
+	// log.Fatal(srv.ListenAndServeTLS(*certFile, *keyFile))
+	log.Fatal(srv.ListenAndServe())
 }
 
 func handleError(w http.ResponseWriter, r *http.Request, err error) {

@@ -34,6 +34,16 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
+func RealIP(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		realIP := r.Header.Get("X-Forwarded-For")
+		if realIP != "" {
+			r.RemoteAddr = realIP
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func PanicRecovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer func() {

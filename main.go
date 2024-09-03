@@ -90,6 +90,7 @@ func main() {
 	if !*prod {
 		handler = middleware.CheckCORS(handler)
 	}
+	handler = middleware.RealIP(handler)
 	handler = middleware.PanicRecovery(handler)
 
 	srv := &http.Server{
